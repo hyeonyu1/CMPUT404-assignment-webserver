@@ -58,83 +58,8 @@ import os
 
 #open() css and html?
 class MyWebServer(socketserver.BaseRequestHandler):
-    
-    # #The webserver can server 404 errors for paths not found
-    # # ask prof for 404, 405, 301 content-type text/html?
-    # def return_404(self):
-    #     return "HTTP/1.1 404 path not found\r\n" + "Conent-Type: text/plain\r\n"+ "Connection: close\r\n\r\n"
-    
-    
-    # #[ ] The webserver supports mime-types for HTML
-    # #[ ] The webserver supports mime-types for CSS   
-    # # serve CSS??  
-    # def handle_mime_types(self, file_path):
-    #     mime_type = file_path.split(".")[1].upper()
-    #     if (mime_type == "HTML"):
-    #         mime = "text/html"
-    #     elif (mime_type == "CSS"):
-    #         mime = "text/css"
-    #     else:
-    #         print("not a type")
-    #         return self.return_404()
-	    
-    #     return "HTTP/1.1 200 OK\r\n" + "Content-Type: " + mime + "\r\n" + "Connection: close\r\n\r\n"    
 
-    # def return_index(self, file_path):
-
-    #     #return?
-    #     mime_type = "text/html"
-    #     return "HTTP/1.1 200 OK\r\n" + "Content-Type: " + mime_type + "\r\n" + "Connection: close\r\n\r\n"    
-   
-    # def handle(self):
-
-    #     self.data = self.request.recv(1024).strip()
-        
-    #     print ("Got a request of: %s\n" % self.data)
-    #     #Got a request of: b'GET /base.css HTTP/1.1\r\nAccept-Encoding:identity\r\nHost: 127.0.0.1:8080\r\nUser-Agent: Python-urllib/3.6\r\nConnection: close'
-       
-    #     #decode bytes
-    #     self.data = self.data.decode()       
-        #     # The webserver can serve files from ./www
-    #     path = os.path.abspath("www")
-    #     #print("path", path)
-        
-        
-    #     # get the file name in www
-    #     string_split = self.data.split()
-    #     #print("string_split", string_split)
-
-    #     if string_split[0] != "GET":
-    #         #????????????????
-    #         mime_type = "text/html"
-    #         send = "HTTP/1.1 405 Method Not Allowed!\r\n" + "Content-Type: " + mime_type + "\r\n" + "Connection: close\r\n\r\n"
-       
-        
-    #     else:
-    #         file_name = string_split[1]
-    #         file_path = path + file_name
-    #         #print("file_path", file_path)
-    #         if os.path.exists(file_path):
-    #         #   print("file exists")
-    #             if os.path.isfile(file_path):
-    #                 send = self.handle_mime_types(file_path)
-    #             #301??? can check for "/" but http addr??
-    #             elif os.path.isdir(file_path):
-    #                 #return index.html?? 
-    #                 if file_path[-1] == "/":
-    #                     if os.path.exists(file_path + "index.html"):
-    #                         send = self.return_index(file_path + "index.html")
-    #                     else:
-    #                         send = self.return_404()
-    #                 else:
-    #                     #Redirect??
-    #                     new_path = file_path + "/"
-    #                     send = "HTTP/1.1 301 Moved Permanently\r\n" + "Location: " + new_path + "Content-Type: ? \r\n" + "Connection: close\r\n\r\n"
-    #         else:
-    #             send = self.return_404()
-        
-        
-        
+    # generates body of reeponse if needed    
     def body_generator(self,body_string):
         length = str(len(body_string))
         body = "<html><body>" + str(body_string) + "</body/></html>"
@@ -151,7 +76,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
         content_length = "Content-length: "
         content_type = "Content-type: "
         
-        
         if ftype == "css":
             file_type = "text/css"
         else:
@@ -159,9 +83,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         if code == 200:
             length = str(len(open(path).read()))
-            # response = header + "200 OK\r\n" + content_type + file_type + "\r\n" + content_length + length + "\r\n"+ body + "\r\n"  + "Conntection: close\r\n\r\n" + open(path).read()
             response = header + "200 OK\r\n" + content_type + file_type + "\r\n" + content_length + length  +"\r\n" + "Connection: close\r\n\r\n" + open(path).read() 
-
         elif code == 404:
             length, body = self.body_generator("path: " + path + "not found")
             response = header + "404 Not Found\r\n" + content_type + file_type + "\r\n" + content_length + length + "\r\n"+ body + "\r\n" + "Conntection: close\r\n\r\n"
@@ -171,7 +93,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # open and read the changed path?
         elif code == 301:
             location, length, body = self.redirection(path)
-            response = header + "301 Moved Permanently\r\n" + content_type + file_type + "\r\n" + content_length + length + "\r\n"  + "Conntection: close\r\n\r\n" + open(path).read()
+            response = header + "301 Moved Permanently\r\n" + content_type + file_type + "\r\n" + content_length + length + "\r\n"  + location +"Conntection: close\r\n\r\n" + open(path+ "/index.html").read()
         
         return response
     
@@ -196,12 +118,26 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # else:
         #     print("data is empty")
 
+
+        #Got a request of: b'GET /../../../../../../../../../../../../etc/group HTTP/1.1\r\n
+        # Accept-Encoding: identity\r\nHost: 127.0.0.1:8080\r\n
+        # User-Agent: Python-urllib/3.7\r\nConnection: close'
+        
+        #Got a request of: b'GET /base.css HTTP/1.1\r\n
+        # Accept-Encoding:identity\r\n
+        # Host: 127.0.0.1:8080\r\n
+        # User-Agent: Python-urllib/3.6\r\nConnection: close'
+        # need = self.data.split("\r\n")[0]
         method = self.data.split()[0]
         file_name = self.data.split()[1]
         print("string_split", file_name + "\n" + method)
         
         if method != "GET":
+            print("Method not supported")
             send = self.response_generator(405, "html", "")
+            print("send: ", send)
+            self.request.sendall(bytearray(send,'utf-8'))
+            
         else:
             print("possible method\n")        
             file_path = path + file_name
@@ -225,9 +161,9 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     self.request.sendall(bytearray(send,'utf-8'))
                 
                 elif os.path.isdir(file_path) and file_path[-1] != '/':
-                    print("reloacting and opening dir")
-                    # send = self.response_generator(301, "html", file_path + "/index.html")
-                    send = "HTTP/1.1\r\n" + "301 Moved Permanently\r\n" + "Content-Type: text/html" + "\r\n"   + "Conntection: close\r\n\r\n" + open(path+"/index.html").read()
+                    print("relocating and opening dir")
+                    send = self.response_generator(301, "html", path)
+                    # send = "HTTP/1.1 " + "301 Moved Permanently\r\n" + "Content-Type: text/html" + "\r\n"   + "Conntection: close\r\n\r\n" + open(path+"/index.html").read()
         
                     print("sending: " + send)
                     self.request.sendall(bytearray(send,'utf-8'))
