@@ -73,69 +73,71 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024).strip()
         
-        #print ("_________________________________________________________________\nGot a request of: %s\n" % self.data)
+        print ("_________________________________________________________________\nGot a request of: %s\n" % self.data)
         
         # decode bytes
         self.data = self.data.decode()       
 
         # setting abs path
         path = os.path.abspath("www")
-        
-        # getting method and file
-        method = self.data.split()[0]
-        file_name = self.data.split()[1]
-        
-        # if method is not GET
-        if method != "GET":
-            send = self.response_generator(405, "html", "")
-            #print("========================> sending: \n" + send)
-            self.request.sendall(bytearray(send,'utf-8'))
+        print("\n" + self.data + "\n")
+        try: 
+            # getting method and file
+            method = self.data.split()[0]
+            file_name = self.data.split()[1]
             
-        else:
-            # chekcing for "/../"
-            if not os.path.exists(path + os.path.realpath(file_name)):
-                send = self.response_generator(404, "html", path + os.path.realpath(file_name))
-                #print("========================> sending: \n" + send)
+            # if method is not GET
+            if method != "GET":
+                send = self.response_generator(405, "html", "")
+                print("========================> sending: \n" + send)
                 self.request.sendall(bytearray(send,'utf-8'))
-            
+                
             else:
+                # chekcing for "/../"
+                if not os.path.exists(path + os.path.realpath(file_name)):
+                    send = self.response_generator(404, "html", path + os.path.realpath(file_name))
+                    print("========================> sending: \n" + send)
+                    self.request.sendall(bytearray(send,'utf-8'))
+                
+                else:
 
-                file_path = path + file_name
+                    file_path = path + file_name
 
-                #if file or dir exists
-                if os.path.exists(file_path):
+                    #if file or dir exists
+                    if os.path.exists(file_path):
 
-                    # if its a file
-                    if os.path.isfile(file_path):
-                        # getting type of file
-                        if "." in file_name:
-                            ftype = file_name.split(".")[1]
-                        else:
-                            ftype = "html"
-    
-                        send = self.response_generator(200, ftype, file_path)
-                        #print("========================> sending: \n" + send)
-                        self.request.sendall(bytearray(send,'utf-8'))
+                        # if its a file
+                        if os.path.isfile(file_path):
+                            # getting type of file
+                            if "." in file_name:
+                                ftype = file_name.split(".")[1]
+                            else:
+                                ftype = "html"
+        
+                            send = self.response_generator(200, ftype, file_path)
+                            print("========================> sending: \n" + send)
+                            self.request.sendall(bytearray(send,'utf-8'))
 
-                    # if it is a dir and ends with "/"
-                    elif os.path.isdir(file_path) and file_path[-1] == '/':
-                        send = self.response_generator(200, "html", file_path + "index.html")
-                        #print("========================> sending: \n" + send)
-                        self.request.sendall(bytearray(send,'utf-8'))
-                   
-                    # if it is a dir but and is missing "/"
-                    elif os.path.isdir(file_path) and file_path[-1] != '/':
-                        send = self.response_generator(301, "html", path)            
-                        #print("========================> sending: \n" + send)
+                        # if it is a dir and ends with "/"
+                        elif os.path.isdir(file_path) and file_path[-1] == '/':
+                            send = self.response_generator(200, "html", file_path + "index.html")
+                            print("========================> sending: \n" + send)
+                            self.request.sendall(bytearray(send,'utf-8'))
+                    
+                        # if it is a dir but and is missing "/"
+                        elif os.path.isdir(file_path) and file_path[-1] != '/':
+                            send = self.response_generator(301, "html", path)            
+                            print("========================> sending: \n" + send)
+                            self.request.sendall(bytearray(send,'utf-8'))
+                
+                    # file does not exist
+                    else:
+                        send = self.response_generator(404, "html", file_path)
+                        print("========================> sending: \n" + send)
                         self.request.sendall(bytearray(send,'utf-8'))
             
-                # file does not exist
-                else:
-                    send = self.response_generator(404, "html", file_path)
-                    #print("========================> sending: \n" + send)
-                    self.request.sendall(bytearray(send,'utf-8'))
-        
-        
+        except:
+            print("Empty Request")    
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
 
